@@ -3,7 +3,7 @@ import pyxel
 class App:
 
     def __init__(self):
-        pyxel.init(172, 128, title="Robo Pizza")
+        pyxel.init(192, 128, title="Robo Pizza")
         pyxel.load("robo_pizza.py.pyxres")
         self.score = 0
         self.player_x = 80
@@ -42,7 +42,7 @@ class App:
         pyxel.cls(1)
 
         # draw background
-        pyxel.blt(0, 0, 0, 0, 16, 172, 128)
+        pyxel.blt(0, 0, 0, 0, 16, 192, 128)
 
         # draw ingredient
 
