@@ -12,6 +12,16 @@ I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer
 
 I_LIST_GOOD = [item for i, item in enumerate(I_LIST) if i % 2 == 0]
 
+class Ingredient:
+
+    def __init__(self, kind, x = 0, y = 0):
+        self.x = x
+        self.y = y
+        self.kind = kind
+        self.name = I_LIST[kind]
+        self.is_alive = True
+        self.is_good = True if kind % 2 == 0 else False
+
 
 class App:
 
@@ -32,11 +42,15 @@ class App:
 
         # current objectives - which ingredients to collect
         # start by picking 3 ingredients from good list
-        self.objectives = [0] + [pyxel.rndi(1, len(I_LIST_GOOD)) for i in range(3)]
+
+        self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_LIST_GOOD)-1)) for i in range(3)]    
+        # self.objectives = [0] + [pyxel.rndi(1, len(I_LIST_GOOD)) for i in range(3)]
 
         # ingredient = (x, y, kind, is_alive)
         # when the game starts, generate some ingredients that are spread horizontally and vertically
         num_ingredients = 3
+
+        # list of Ingredient objects
         self.ingredients = [
             self.generate_ingredient() for i in range(num_ingredients)
         ] 
@@ -55,7 +69,7 @@ class App:
 
         # update ingredients
         for i, v in enumerate(self.ingredients):
-            self.ingredients[i] = self.update_ingredient(*v)
+            self.ingredients[i] = self.update_ingredient(v)
 
 
     def update_pizza(self, kind):
@@ -73,27 +87,31 @@ class App:
         # check to see if there is a pizza base already - if so, do not generate more
         start_types = 1 if self.is_base else 0
         num_types = 12
-        return (pyxel.rndi(I_SIZE, WIDTH-I_SIZE), pyxel.rndi(-5*I_SIZE, -I_SIZE), pyxel.rndi(start_types, num_types), True)
+        x = pyxel.rndi(I_SIZE, WIDTH-I_SIZE)
+        y = pyxel.rndi(-5*I_SIZE, -I_SIZE)  
+        kind = pyxel.rndi(start_types, num_types)
+
+        return Ingredient(kind, x, y)
 
 
-    def update_ingredient(self, x, y, kind, is_alive):
+    def update_ingredient(self, ingredient):
         # need some terminal condition
         # if ingredient is 'alive' and is at right position relative to tray, ingredient should be added to pizza
-        if is_alive and abs(x - (self.player_x + 16)) < 16 and abs(y - self.player_y) < 12:
-            is_alive = False
+        if ingredient.is_alive and abs(ingredient.x - (self.player_x + 16)) < 16 and abs(ingredient.y - self.player_y) < 8:
+            ingredient.is_alive = False
             # play sound?
 
-            # add ingredient to pizza and update score
-            self.update_pizza(kind)
+            # add ingredient kind to pizza and update score
+            self.update_pizza(ingredient.kind)
 
         fall_speed = 1
-        y += fall_speed
+        ingredient.y += fall_speed
 
         # if ingredient hits the floor, generate a new one
-        if y > I_LIMIT:
-            x, y, kind, is_alive = self.generate_ingredient()
+        if ingredient.y > I_LIMIT:
+            ingredient = self.generate_ingredient()
 
-        return (x, y, kind, is_alive)
+        return ingredient
 
     def update_player(self):
 
@@ -118,9 +136,9 @@ class App:
         
 
         # draw ingredients
-        for x, y, kind, is_alive in self.ingredients:
-            if is_alive:
-                pyxel.blt(x, y, 1, (kind % 4) * 16, pyxel.floor(kind / 4) * 16, 16, 16, 1)
+        for ingredient in self.ingredients:
+            if ingredient.is_alive:
+                pyxel.blt(ingredient.x, ingredient.y, 1, (ingredient.kind % 4) * 16, pyxel.floor(ingredient.kind / 4) * 16, 16, 16, 1)
 
 
 
@@ -140,10 +158,10 @@ class App:
         pyxel.bltm(192, 0, 0, 192, 0, 64, 128)
         pyxel.text(204, 6, "Order's Up!", 0)
 
-        for i, obj in enumerate(self.objectives):
-            pyxel.text(204, (i+1)*24, I_LIST_GOOD[obj], 0)
-            kind = obj*2
-            pyxel.blt(210, (i+1.2)*24, 1, (kind % 4) * 16, pyxel.floor(kind / 4) * 16, 16, 16, 1)
+        for i, ingredient in enumerate(self.objectives):
+            pyxel.text(204, (i+1)*24, ingredient.name, 0)
+            # kind = obj*2
+            pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * 16, pyxel.floor(ingredient.kind / 4) * 16, 16, 16, 1)
             # if obj in self.pizza:
                 # pass
             # else:
