@@ -8,6 +8,7 @@ I_LIMIT = 110    # height at which ingredients should disappear
 
 #TODO: make real use of global vars - go through and try to remove magic nums
 # update objectives
+# draw pizzas
 
 
 # Ordered list of ingredients for converting 'kind' integer to name
@@ -130,8 +131,9 @@ class App:
         # when we collect an ingredient we want to:
         # draw an updated pizza on top of the robot
         # change the objectives list to acknowledge the change
+        
+        # if set(self.pizza).issubset(set(self.objectives))
         pass
-    
 
 
     def draw(self):
