@@ -4,17 +4,19 @@ import pyxel
 I_SIZE = 16      # ingredient block size
 WIDTH = 192     # window width
 HEIGHT = 128    # window height
-I_LIMIT = 100    # height at which ingredients should disappear
+I_LIMIT = 110    # height at which ingredients should disappear
 
 # Ordered list of ingredients for converting 'kind' integer to name
-I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Tomato', 'Aubergine', 'Hammer', 
-            'Swiss Cheese', 'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce']
+I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
+            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce']
+
+I_LIST_GOOD = [item for i, item in enumerate(I_LIST) if i % 2 == 0]
 
 
 class App:
 
     def __init__(self):
-        pyxel.init(WIDTH, HEIGHT, title="Robo Pizza")
+        pyxel.init(WIDTH + 64, HEIGHT, title="Robo Pizza")
         pyxel.load("robo_pizza.py.pyxres")
         # starting conditions
         self.score = 0
@@ -27,6 +29,10 @@ class App:
 
         # current pizza that is being built
         self.pizza = []
+
+        # current objectives - which ingredients to collect
+        # start by picking 3 ingredients from good list
+        self.objectives = [0] + [pyxel.rndi(1, len(I_LIST_GOOD)) for i in range(3)]
 
         # ingredient = (x, y, kind, is_alive)
         # when the game starts, generate some ingredients that are spread horizontally and vertically
@@ -67,7 +73,7 @@ class App:
         # check to see if there is a pizza base already - if so, do not generate more
         start_types = 1 if self.is_base else 0
         num_types = 12
-        return (pyxel.rndi(I_SIZE, pyxel.width-I_SIZE), pyxel.rndi(-5*I_SIZE, -I_SIZE), pyxel.rndi(start_types, num_types), True)
+        return (pyxel.rndi(I_SIZE, WIDTH-I_SIZE), pyxel.rndi(-5*I_SIZE, -I_SIZE), pyxel.rndi(start_types, num_types), True)
 
 
     def update_ingredient(self, x, y, kind, is_alive):
@@ -95,9 +101,12 @@ class App:
             self.player_x = max(self.player_x - 2, -8)
             self.player_dx = -1
         if pyxel.btn(pyxel.KEY_RIGHT):
-            self.player_x = min(self.player_x + 2, pyxel.width - 24)
+            self.player_x = min(self.player_x + 2, WIDTH - 24)
             self.player_dx = 1
 
+    def update_objectives(self):
+        pass
+    
 
 
     def draw(self):
@@ -105,6 +114,8 @@ class App:
 
         # draw background
         pyxel.bltm(0, 0, 0, 0, 0, 192, 128)
+
+        
 
         # draw ingredients
         for x, y, kind, is_alive in self.ingredients:
@@ -124,6 +135,20 @@ class App:
             32,
             1
         )
+
+        # draw objectives
+        pyxel.bltm(192, 0, 0, 192, 0, 64, 128)
+        pyxel.text(204, 6, "Order's Up!", 0)
+
+        for i, obj in enumerate(self.objectives):
+            pyxel.text(204, (i+1)*24, I_LIST_GOOD[obj], 0)
+            kind = obj*2
+            pyxel.blt(210, (i+1.2)*24, 1, (kind % 4) * 16, pyxel.floor(kind / 4) * 16, 16, 16, 1)
+            # if obj in self.pizza:
+                # pass
+            # else:
+                # pyxel.blt()
+                # pass
 
         # draw score
         outstr = "Score: " + str(self.score)
