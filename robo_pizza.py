@@ -1,10 +1,14 @@
 import pyxel
 
 # GLOBAL VARS
-ISIZE = 16      # ingredient block size
+I_SIZE = 16      # ingredient block size
 WIDTH = 192     # window width
 HEIGHT = 128    # window height
-ILIMIT = 100    # height at which ingredients should disappear
+I_LIMIT = 100    # height at which ingredients should disappear
+
+# Ordered list of ingredients for converting 'kind' integer to name
+I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Tomato', 'Aubergine', 'Hammer', 
+            'Swiss Cheese', 'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce']
 
 
 class App:
@@ -20,6 +24,9 @@ class App:
         self.is_alive = True
         # checks if there is a pizza base already
         self.is_base = False
+
+        # current pizza that is being built
+        self.pizza = []
 
         # ingredient = (x, y, kind, is_alive)
         # when the game starts, generate some ingredients that are spread horizontally and vertically
@@ -45,15 +52,22 @@ class App:
             self.ingredients[i] = self.update_ingredient(*v)
 
 
-    def update_pizza():
-        pass
+    def update_pizza(self, kind):
+            # code - all odd ingredients are bad 
+            if kind % 2 == 0:
+                self.pizza.append(kind)
+                self.score += 1
+
+            else:
+                self.pizza = []
+                self.score = 0
 
     def generate_ingredient(self):
 
         # check to see if there is a pizza base already - if so, do not generate more
         start_types = 1 if self.is_base else 0
         num_types = 12
-        return (pyxel.rndi(ISIZE, pyxel.width-ISIZE), pyxel.rndi(-5*ISIZE, -ISIZE), pyxel.rndi(start_types, num_types), True)
+        return (pyxel.rndi(I_SIZE, pyxel.width-I_SIZE), pyxel.rndi(-5*I_SIZE, -I_SIZE), pyxel.rndi(start_types, num_types), True)
 
 
     def update_ingredient(self, x, y, kind, is_alive):
@@ -61,14 +75,16 @@ class App:
         # if ingredient is 'alive' and is at right position relative to tray, ingredient should be added to pizza
         if is_alive and abs(x - (self.player_x + 16)) < 16 and abs(y - self.player_y) < 12:
             is_alive = False
-            self.score += 1
             # play sound?
+
+            # add ingredient to pizza and update score
+            self.update_pizza(kind)
 
         fall_speed = 1
         y += fall_speed
 
         # if ingredient hits the floor, generate a new one
-        if y > ILIMIT:
+        if y > I_LIMIT:
             x, y, kind, is_alive = self.generate_ingredient()
 
         return (x, y, kind, is_alive)
@@ -110,5 +126,7 @@ class App:
         )
 
         # draw score
+        outstr = "Score: " + str(self.score)
+        pyxel.text(8, 8, outstr, 9)
 
 App()
