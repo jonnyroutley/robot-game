@@ -6,6 +6,10 @@ WIDTH = 192     # window width
 HEIGHT = 128    # window height
 I_LIMIT = 110    # height at which ingredients should disappear
 
+#TODO: make real use of global vars - go through and try to remove magic nums
+# update objectives
+
+
 # Ordered list of ingredients for converting 'kind' integer to name
 I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
             'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce']
@@ -123,6 +127,9 @@ class App:
             self.player_dx = 1
 
     def update_objectives(self):
+        # when we collect an ingredient we want to:
+        # draw an updated pizza on top of the robot
+        # change the objectives list to acknowledge the change
         pass
     
 
@@ -160,13 +167,12 @@ class App:
 
         for i, ingredient in enumerate(self.objectives):
             pyxel.text(204, (i+1)*24, ingredient.name, 0)
-            # kind = obj*2
-            pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * 16, pyxel.floor(ingredient.kind / 4) * 16, 16, 16, 1)
-            # if obj in self.pizza:
-                # pass
-            # else:
-                # pyxel.blt()
-                # pass
+            if ingredient.kind in self.pizza:
+                pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * 16, pyxel.floor(ingredient.kind / 4) * 16, 16, 16, 1)
+                pyxel.blt(210, (i+1.2)*24, 0, 0, 0, 16, 16, 1)
+
+            else:
+                pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * 16, pyxel.floor(ingredient.kind / 4) * 16, 16, 16, 1)
 
         # draw score
         outstr = "Score: " + str(self.score)
