@@ -52,14 +52,14 @@ class App:
 
         # check to see if there is a pizza base already - if so, do not generate more
         start_types = 1 if self.is_base else 0
-        num_types = 9
-        return (pyxel.rndi(ISIZE, pyxel.width-ISIZE), pyxel.rndi(-5*ISIZE, -ISIZE), pyxel.rndi(0, num_types), True)
+        num_types = 12
+        return (pyxel.rndi(ISIZE, pyxel.width-ISIZE), pyxel.rndi(-5*ISIZE, -ISIZE), pyxel.rndi(start_types, num_types), True)
 
 
     def update_ingredient(self, x, y, kind, is_alive):
         # need some terminal condition
         # if ingredient is 'alive' and is at right position relative to tray, ingredient should be added to pizza
-        if is_alive and abs(x - self.player_x) < 12 and abs(y - self.player_y) < 12:
+        if is_alive and abs(x - (self.player_x + 16)) < 16 and abs(y - self.player_y) < 12:
             is_alive = False
             self.score += 1
             # play sound?
@@ -88,7 +88,7 @@ class App:
         pyxel.cls(1)
 
         # draw background
-        pyxel.blt(0, 0, 0, 0, 16, 192, 128)
+        pyxel.bltm(0, 0, 0, 0, 0, 192, 128)
 
         # draw ingredients
         for x, y, kind, is_alive in self.ingredients:
@@ -103,7 +103,7 @@ class App:
             self.player_y,
             0,
             0 if self.player_dx < 0 else 32, 
-            160,
+            16,
             32,
             32,
             1
