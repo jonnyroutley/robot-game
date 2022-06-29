@@ -1,37 +1,46 @@
 import pyxel
 
 # GLOBAL VARS
-
+ISIZE = 16      # ingredient block size
+WIDTH = 192     # window width
+HEIGHT = 128    # window height
+ILIMIT = 100    # height at which ingredients should disappear
 
 
 class App:
 
     def __init__(self):
-        pyxel.init(192, 128, title="Robo Pizza")
+        pyxel.init(WIDTH, HEIGHT, title="Robo Pizza")
         pyxel.load("robo_pizza.py.pyxres")
+        # starting conditions
         self.score = 0
         self.player_x = 85
         self.player_y = 92
-        self.player_dx = 0
+        self.player_dx = 0      #dx is used to indicate last used direction of travel
         self.is_alive = True
+        # checks if there is a pizza base already
+        self.is_base = False
 
         # ingredient = (x, y, kind, is_alive)
         # when the game starts, generate some ingredients that are spread horizontally and vertically
-        num_ingredients = 4
+        num_ingredients = 3
         self.ingredients = [
             self.generate_ingredient() for i in range(num_ingredients)
         ] 
 
 
-        # music playm
+        # for music: pyxel.playm()
         pyxel.run(self.update, self.draw)
 
     def update(self):
+        # exit game by pressing Q
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
 
+        # update robot
         self.update_player()
 
+        # update ingredients
         for i, v in enumerate(self.ingredients):
             self.ingredients[i] = self.update_ingredient(*v)
 
@@ -40,17 +49,26 @@ class App:
         pass
 
     def generate_ingredient(self):
+
+        # check to see if there is a pizza base already - if so, do not generate more
+        start_types = 1 if self.is_base else 0
         num_types = 9
-        return (pyxel.rndi(8, pyxel.width-8), pyxel.rndi(-70, -10), pyxel.rndi(0, num_types), True)
+        return (pyxel.rndi(ISIZE, pyxel.width-ISIZE), pyxel.rndi(-5*ISIZE, -ISIZE), pyxel.rndi(0, num_types), True)
 
 
     def update_ingredient(self, x, y, kind, is_alive):
         # need some terminal condition
-        # if is_alive and abs()
+        # if ingredient is 'alive' and is at right position relative to tray, ingredient should be added to pizza
+        if is_alive and abs(x - self.player_x) < 12 and abs(y - self.player_y) < 12:
+            is_alive = False
+            self.score += 1
+            # play sound?
 
-        y += 1
+        fall_speed = 1
+        y += fall_speed
 
-        if y > 100:
+        # if ingredient hits the floor, generate a new one
+        if y > ILIMIT:
             x, y, kind, is_alive = self.generate_ingredient()
 
         return (x, y, kind, is_alive)
