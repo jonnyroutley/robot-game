@@ -13,7 +13,7 @@ I_LIMIT = 110    # height at which ingredients should disappear
 
 # Ordered list of ingredients for converting 'kind' integer to name
 I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
-            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce']
+            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce', 'Paperclip', 'Basil']
 
 I_LIST_GOOD = [item for i, item in enumerate(I_LIST) if i % 2 == 0]
 
@@ -91,7 +91,7 @@ class App:
 
         # check to see if there is a pizza base already - if so, do not generate more
         start_types = 1 if self.is_base else 0
-        num_types = 12
+        num_types = len(I_LIST) - 1
         x = pyxel.rndi(I_SIZE, WIDTH-I_SIZE)
         y = pyxel.rndi(-5*I_SIZE, -I_SIZE)  
         kind = pyxel.rndi(start_types, num_types)
