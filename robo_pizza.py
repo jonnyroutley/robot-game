@@ -9,6 +9,7 @@ HEIGHT = 128    # window height
 I_LIMIT = 110    # height at which ingredients should disappear
 
 #TODO: make real use of global vars - go through and try to remove magic nums
+# add speech bubbles for bad items
 # update objectives/score
 # game behaviour:
 # pizza order should always be base first then sauce if included
@@ -22,11 +23,12 @@ I_LIMIT = 110    # height at which ingredients should disappear
 
 
 # Ordered list of ingredients for converting 'kind' integer to name
-I_LIST = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
+I_NAMES = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
             'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce', 'Paperclip', 'Basil']
 
-I_LIST_GOOD = [i for i, item in enumerate(I_LIST) if i % 2 == 0]
-I_LIST_BAD = [i for i, item in enumerate(I_LIST) if i % 2 != 0]
+# The way the drawings are ordered, every other item is good and the rest are bad
+I_NUMS_GOOD = [i for i, item in enumerate(I_NAMES) if i % 2 == 0]
+I_NUMS_BAD = [i for i, item in enumerate(I_NAMES) if i % 2 != 0]
 
 class Ingredient:
 
@@ -34,7 +36,7 @@ class Ingredient:
         self.x = x
         self.y = y
         self.kind = kind
-        self.name = I_LIST[kind]
+        self.name = I_NAMES[kind]
         self.is_alive = True
         self.is_good = True if kind % 2 == 0 else False
 
@@ -45,7 +47,11 @@ class IngredientList:
 
     def __init__(self, factor = 1):
         self.factor = factor
-        self.items = I_LIST_GOOD * factor + I_LIST_BAD
+
+        # exclude base from this 
+        self.items = I_NUMS_GOOD[1:] * factor + I_NUMS_BAD
+
+
         random.shuffle(self.items)
 
 class App:
@@ -75,7 +81,7 @@ class App:
 
         
 
-        self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_LIST_GOOD)-1)) for i in range(3)]    
+        self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]    
         # self.objectives = [0] + [pyxel.rndi(1, len(I_LIST_GOOD)) for i in range(3)]
 
         # ingredient = (x, y, kind, is_alive)
@@ -109,28 +115,33 @@ class App:
                 self.pizza.append(kind)
                 self.score += 1
 
+                if kind == 0:
+                    self.is_base = True
+
             else:
                 self.pizza = []
                 self.score = 0
+                self.is_base = False
+
 
     def generate_ingredient(self):
         # improvement - good ingredients appear at a different frequency to bad ingredients using IngredientList class
 
+        # x and y position for new ingredient
+        x = pyxel.rndi(I_SIZE, GAME_W-I_SIZE)
+        y = pyxel.rndi(-5*I_SIZE, -I_SIZE)  
+
+        # if IL is empty then regenerate
         if not self.IL.items:
             self.IL = IngredientList(self.factor)
         
-        kind = self.IL.items.pop()
+        # if pizza has no base, we want to generate it and more frequently than normal
+        if not self.is_base and pyxel.rndi(0,3) == 1:
+            kind = 0        # randomly generate number between 0 and 3 and if it equals 1 then generate base
 
-
-        # remove this feature for now
-            # check to see if there is a pizza base already - if so, do not generate more
-            # start_types = 1 if self.is_base else 0
-            # num_types = len(I_LIST) - 1
-
-
-        x = pyxel.rndi(I_SIZE, GAME_W-I_SIZE)
-        y = pyxel.rndi(-5*I_SIZE, -I_SIZE)  
-        # kind = pyxel.rndi(start_types, num_types)
+        # otherwise stick to regular order of ingredients
+        else:
+            kind = self.IL.items.pop()
 
         return Ingredient(kind, x, y)
 
