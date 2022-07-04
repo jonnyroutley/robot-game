@@ -9,8 +9,16 @@ HEIGHT = 128    # window height
 I_LIMIT = 110    # height at which ingredients should disappear
 
 #TODO: make real use of global vars - go through and try to remove magic nums
-# update objectives
-# draw pizzas
+# update objectives/score
+# game behaviour:
+# pizza order should always be base first then sauce if included
+# repeats are allowed 
+# ingredients should be collected in order: base, sauce, any order for toppings
+# once all ingredients are collected, new order is made - points added and potentially difficulty changed
+# if ingredient is added in wrong order, pizza will not change but a strike will be incurred - 3 strikes and game is over
+# strike also added for bad ingredient added and pizza will be tossed 
+
+
 
 
 # Ordered list of ingredients for converting 'kind' integer to name
@@ -51,6 +59,7 @@ class App:
         self.player_y = 92
         self.player_dx = 0      #dx is used to indicate last used direction of travel
         self.is_alive = True
+        self.strikes = 1
         # checks if there is a pizza base already
         self.is_base = False
 
@@ -214,16 +223,27 @@ class App:
         pyxel.text(GAME_W + OBJ_W/6, 6, "Order's Up!", 0)
 
         for i, ingredient in enumerate(self.objectives):
+            # draw text for ingredient
             pyxel.text(204, (i+1)*24, ingredient.name, 0)
+            # draw icon for ingredient
+            pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
+            
+            # draw tick for correct ingredients in pizza
             if ingredient.kind in self.pizza:
-                pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
                 pyxel.blt(210, (i+1.2)*24, 0, 0, 0, I_SIZE, I_SIZE, 1)
 
-            else:
-                pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
+
 
         # draw score
         outstr = "Score: " + str(self.score)
         pyxel.text(8, 8, outstr, 9)
+
+        # draw number of strikes
+        # rectangle in top right corner of game canvas
+        pyxel.rect(GAME_W - I_SIZE*2 - 3, 1, I_SIZE*2+2, I_SIZE/2+2, 1)
+
+        for i in range(self.strikes):
+            pyxel.blt(GAME_W - I_SIZE*2 - 2 + 3*I_SIZE/4*i, 2, 0, I_SIZE, 0, I_SIZE/2, I_SIZE/2, 1)
+
 
 App()
