@@ -65,7 +65,7 @@ class App:
         self.player_y = 92
         self.player_dx = 0      #dx is used to indicate last used direction of travel
         self.is_alive = True
-        self.strikes = 1
+        self.strikes = 0
         # checks if there is a pizza base already
         self.is_base = False
 
@@ -110,18 +110,32 @@ class App:
 
 
     def update_pizza(self, kind):
-            # code - all odd ingredients are bad 
-            if kind % 2 == 0:
+        # code - all odd ingredients are bad 
+
+        # if good ingredient collected
+        if kind % 2 == 0:
+
+            # if ingredient is in our objectives, add to pizza and increase score by 1
+            if kind in [ingredient.kind for ingredient in self.objectives if not ingredient.kind in self.pizza or not in self.pizza]:
                 self.pizza.append(kind)
                 self.score += 1
 
-                if kind == 0:
-                    self.is_base = True
-
             else:
-                self.pizza = []
-                self.score = 0
-                self.is_base = False
+                self.strikes += 1
+
+            # if we collect a base, mark .is_base as True so no more bases are generated
+            if kind == 0:
+                self.is_base = True
+
+        # if bad ingredient is collected, empty pizza and add a strike. Also set is_base to False.
+        else:
+            self.pizza = []
+            self.strikes += 1
+            self.is_base = False
+
+
+        # given our new pizza, check to see if objectives need updating
+        self.update_objectives()
 
 
     def generate_ingredient(self):
@@ -179,12 +193,33 @@ class App:
             self.player_dx = 1
 
     def update_objectives(self):
-        # when we collect an ingredient we want to:
-        # draw an updated pizza on top of the robot
-        # change the objectives list to acknowledge the change
+        # check to see whether our current objectives need changing
+
+        # if order is complete then we want to create a new order:
+        # print(self.pizza.sort())
+        # print([i.kind for i in self.objectives].sort())
+        
+        if sorted(self.pizza) == sorted([i.kind for i in self.objectives]):
+            self.score += 5
+            self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+
+            # reset pizza
+            self.pizza = []
+            self.is_base = False
+
+        if self.strikes == 3:
+            self.strikes = 0
+            self.score = 0
+            self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+            self.pizza = []
+            self.is_base = False
+
+
+        # generate a new order to be made by the robot
         
         # if set(self.pizza).issubset(set(self.objectives))
-        pass
+
+        # if order is complete then create new order
 
 
     def draw(self):
