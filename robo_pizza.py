@@ -1,5 +1,11 @@
+# Import Modules
 import pyxel
-import random
+from random import shuffle
+
+# Import Classes
+import Ingredient
+import IngredientList
+import Objective
 
 # GLOBAL VARS
 I_SIZE = 16      # ingredient block size
@@ -30,29 +36,9 @@ I_NAMES = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hamme
 I_NUMS_GOOD = [i for i, item in enumerate(I_NAMES) if i % 2 == 0]
 I_NUMS_BAD = [i for i, item in enumerate(I_NAMES) if i % 2 != 0]
 
-class Ingredient:
-
-    def __init__(self, kind, x = 0, y = 0):
-        self.x = x
-        self.y = y
-        self.kind = kind
-        self.name = I_NAMES[kind]
-        self.is_alive = True
-        self.is_good = True if kind % 2 == 0 else False
-
-class IngredientList:
-    # intention here is to help improve how new ingredients are generated
-    # this class uses a factor to create an array with *factor* times more good ingredients than bad
-    # the array is then shuffled, and items can be taken from this shuffled array
-
-    def __init__(self, factor = 1):
-        self.factor = factor
-
-        # exclude base from this 
-        self.items = I_NUMS_GOOD[1:] * factor + I_NUMS_BAD
 
 
-        random.shuffle(self.items)
+
 
 class App:
 
@@ -81,7 +67,9 @@ class App:
 
         
 
-        self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]    
+        self.objectives = self.generate_objectives()
+        
+        # [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]    
         # self.objectives = [0] + [pyxel.rndi(1, len(I_LIST_GOOD)) for i in range(3)]
 
         # ingredient = (x, y, kind, is_alive)
@@ -116,7 +104,7 @@ class App:
         if kind % 2 == 0:
 
             # if ingredient is in our objectives, add to pizza and increase score by 1
-            if kind in [ingredient.kind for ingredient in self.objectives if not ingredient.kind in self.pizza or not in self.pizza]:
+            if kind in [ingredient.kind for ingredient in self.objectives if ingredient.kind not in self.pizza]:
                 self.pizza.append(kind)
                 self.score += 1
 
@@ -192,6 +180,12 @@ class App:
             self.player_x = min(self.player_x + 2, GAME_W - 24)
             self.player_dx = 1
 
+    def generate_objectives(self):
+        # return a new list of Objective items which form a new pizza order
+        # each pizza must include a base
+        objectives = Objective(0) + [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+        return objectives
+
     def update_objectives(self):
         # check to see whether our current objectives need changing
 
@@ -248,8 +242,6 @@ class App:
             32,
             1
         )
-
-        pyxel.pset(self.player_x, self.player_y, 11)
 
         # draw pizza
         for i, kind in enumerate(self.pizza):    
