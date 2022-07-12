@@ -16,16 +16,10 @@ I_LIMIT = 110    # height at which ingredients should disappear
 
 #TODO:
 # add speech bubbles for bad items
-# update objectives/score
-# game behaviour:
-# pizza order should always be base first then sauce if included
-# repeats are allowed 
-# ingredients should be collected in order: base, sauce, any order for toppings
-# once all ingredients are collected, new order is made - points added and potentially difficulty changed
-# if ingredient is added in wrong order, pizza will not change but a strike will be incurred - 3 strikes and game is over
-# strike also added for bad ingredient added and pizza will be tossed 
-
-#TODO: pizza and objectives might not both be necessary - pizza is essentially our fulfilled objectives
+# enforce base collection first
+# allow for an entirely bad pizza order to come in sometimes
+# add variable difficulty as game progresses
+# NOTE: pizza and objectives might not both be necessary - pizza is essentially our fulfilled objectives
 
 
 
@@ -132,7 +126,7 @@ class App:
             ingredient = self.generate_ingredient()
 
         # otherwise, let the ingredient keep falling
-        fall_speed = 1      # this could also be utilised for changing difficulty 
+        fall_speed = 1.2      # this could also be utilised for changing difficulty 
         ingredient.y += fall_speed
 
         return ingredient
@@ -191,7 +185,7 @@ class App:
             self.IL = IngredientList(self.factor, I_NUMS_GOOD, I_NUMS_BAD)
         
         # if pizza has no base, we want to generate it and more frequently than normal
-        if not self.is_base and pyxel.rndi(0,3) == 1:
+        if not self.is_base and pyxel.rndi(0,2) == 1:
             kind = 0        # randomly generate number between 0 and 3 and if it equals 1 then generate base
 
         # otherwise stick to regular order of ingredients
@@ -234,10 +228,32 @@ class App:
     def draw(self):
         pyxel.cls(1)
 
+
         # draw background
         pyxel.bltm(0, 0, 0, 0, 0, 192, 128)
-
         
+        # add animations:
+        # fire:
+        if pyxel.frame_count % 30 < 15:
+            pyxel.blt(24, 80, 0, 24, 80, I_SIZE/2, I_SIZE/2)
+            pyxel.blt(32, 80, 0, 24, 80, I_SIZE/2, I_SIZE/2)
+
+        # smoke:
+        if pyxel.frame_count % 50 < 10:
+            pyxel.blt(24, 64, 0, 8, 96, I_SIZE/2, I_SIZE/2)
+            pyxel.blt(32, 64, 0, 8, 96, I_SIZE/2, I_SIZE/2)
+
+        # stars:
+        if pyxel.frame_count % 100 < 10:
+            pyxel.blt(48, 8, 0, 16, 64, I_SIZE/2, I_SIZE/2)
+        if pyxel.frame_count % 100 > 40 and pyxel.frame_count % 100 < 50:
+            pyxel.blt(96, 8, 0, 16, 72, I_SIZE/2, I_SIZE/2)
+        if pyxel.frame_count % 100 > 80 and pyxel.frame_count % 100 < 90:
+            pyxel.blt(168, 16, 0, 16, 72, I_SIZE/2, I_SIZE/2)
+
+
+        # trains:
+        self.animate_train(pyxel.frame_count, 500, 15)        
 
         # draw ingredients
         for ingredient in self.ingredients:
@@ -299,4 +315,48 @@ class App:
             pyxel.blt(GAME_W - I_SIZE*2 - 2 + 3*I_SIZE/4*i, 2, 0, I_SIZE, 0, I_SIZE/2, I_SIZE/2, 1)
 
 
-App()
+    def animate_train(self, frame_count, freq = 1000, speed = 20):
+        # draw the train going from left to right at a specified frequency and speed
+        # speed here refers to how many frames in each position the train stays at, so the smaller the number the 'faster' the train
+        # travels across the screen
+            
+            t = pyxel.floor(frame_count % freq / speed)
+            match t:
+                case 0:
+                    pyxel.blt(136, 80, 0, 24, 48, I_SIZE/2, I_SIZE)
+
+                case 1:
+                    pyxel.blt(136, 80, 0, 24, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(144, 80, 0, 40, 48, I_SIZE/2, I_SIZE)
+
+                case 2:
+                    pyxel.blt(136, 80, 0, 24, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(144, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(152, 80, 0, 40, 48, I_SIZE/2, I_SIZE)
+
+                case 3:
+                    pyxel.blt(136, 80, 0, 24, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(144, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(152, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+
+                case 4:
+                    pyxel.blt(144, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(152, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+
+                case 5:
+                    pyxel.blt(176, 80, 0, 40, 48, I_SIZE/2, I_SIZE)
+                    pyxel.blt(152, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+
+                case 6:
+                    pyxel.blt(176, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+                
+                case 7:
+                    pyxel.blt(176, 80, 0, 32, 48, I_SIZE/2, I_SIZE)
+                
+                case 8:
+                    pyxel.blt(176, 80, 0, 40, 64, I_SIZE/2, I_SIZE)
+
+                case _:
+                    pass
+
+App()    
