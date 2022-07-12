@@ -3,9 +3,9 @@ import pyxel
 from random import shuffle
 
 # Import Classes
-import Ingredient
-import IngredientList
-import Objective
+from Ingredient import Ingredient
+from IngredientList import IngredientList
+from Objective import Objective    
 
 # GLOBAL VARS
 I_SIZE = 16      # ingredient block size
@@ -24,6 +24,8 @@ I_LIMIT = 110    # height at which ingredients should disappear
 # once all ingredients are collected, new order is made - points added and potentially difficulty changed
 # if ingredient is added in wrong order, pizza will not change but a strike will be incurred - 3 strikes and game is over
 # strike also added for bad ingredient added and pizza will be tossed 
+
+#TODO: pizza and objectives might not both be necessary - pizza is essentially our fulfilled objectives
 
 
 
@@ -119,7 +121,7 @@ class App:
             # add the ingredient kind to the pizza 
             self.update_pizza(ingredient.kind)
 
-            # set this ingredient to 
+            # set this ingredient to having been collected
             ingredient.collected = True
 
             # play sound?
@@ -130,7 +132,7 @@ class App:
             ingredient = self.generate_ingredient()
 
         # otherwise, let the ingredient keep falling
-        fall_speed = 1
+        fall_speed = 1      # this could also be utilised for changing difficulty 
         ingredient.y += fall_speed
 
         return ingredient
@@ -138,22 +140,33 @@ class App:
 
 
     def update_pizza(self, kind):
-        # code - all odd ingredients are bad 
+        # this function is called whenever an ingredient is collected by the player
 
-        # if good ingredient collected
+        # if a good ingredient is collected:
         if kind % 2 == 0:
+            saved_score = self.score
+            for obj in self.objectives:
+                # if ingredient is one of our unfulfilled objectives:
+                if kind == obj.kind and not obj.achieved:
+                     # add the ingredient kind to our pizza (so that it can be drawn)
+                        self.pizza.append(kind)
 
-            # if ingredient is in our objectives, add to pizza and increase score by 1
-            if kind in [ingredient.kind for ingredient in self.objectives if ingredient.kind not in self.pizza]:
-                self.pizza.append(kind)
-                self.score += 1
+                        # update our objectives
+                        obj.achieved = True
 
-            else:
+                        # increase the score by 1
+                        self.score += 1
+
+                        # if we collect a base, mark .is_base as True so no more bases are generated
+                        if kind == 0:
+                            self.is_base = True
+                        
+                        break       # exit loop once ingredient has been found
+            
+            # if score hasn't changed, we either collected an item that isn't part of our objectives or has already been collected
+            if saved_score == self.score:
+                # therefore, don't add it to the pizza and incur a strike
                 self.strikes += 1
-
-            # if we collect a base, mark .is_base as True so no more bases are generated
-            if kind == 0:
-                self.is_base = True
 
         # if bad ingredient is collected, empty pizza and add a strike. Also set is_base to False.
         else:
@@ -191,9 +204,9 @@ class App:
     def generate_objectives(self):
         # return a new list of Objective items which form a new pizza order
         # each pizza must include a base
-        objectives = Objective(0) + [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+        objectives = [Objective(0)] + [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
 
-        #TODO: if 
+        #TODO: if sauce is included, this should come after base. Also need to enforce base/sauce collection before other toppings
 
         return objectives
 
@@ -201,31 +214,21 @@ class App:
         # check to see whether our current objectives need changing
 
         # if order is complete then we want to create a new order:
-        # print(self.pizza.sort())
-        # print([i.kind for i in self.objectives].sort())
-        
-        if sorted(self.pizza) == sorted([i.kind for i in self.objectives]):
+        if all(obj.achieved for obj in self.objectives):
+            # increase score by 5
             self.score += 5
-            # self.objectives = [Ingredient(0, I_NAMES)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
             self.objectives = self.generate_objectives()
-
             # reset pizza
             self.pizza = []
             self.is_base = False
 
+        # if we have 3 strikes, then we lose and need to start again
         if self.strikes == 3:
             self.strikes = 0
             self.score = 0
-            self.objectives = [Ingredient(0)] + [Ingredient(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+            self.objectives = self.generate_objectives()
             self.pizza = []
             self.is_base = False
-
-
-        # generate a new order to be made by the robot
-        
-        # if set(self.pizza).issubset(set(self.objectives))
-
-        # if order is complete then create new order
 
 
     def draw(self):
@@ -272,14 +275,14 @@ class App:
         pyxel.bltm(GAME_W, 0, 0, GAME_W, 0, OBJ_W, HEIGHT)
         pyxel.text(GAME_W + OBJ_W/6, 6, "Order's Up!", 0)
 
-        for i, ingredient in enumerate(self.objectives):
-            # draw text for ingredient
-            pyxel.text(204, (i+1)*24, ingredient.name, 0)
-            # draw icon for ingredient
-            pyxel.blt(210, (i+1.2)*24, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
+        for i, obj in enumerate(self.objectives):
+            # draw text for objective
+            pyxel.text(204, (i+1)*24, I_NAMES[obj.kind], 0)
+            # draw icon for objective
+            pyxel.blt(210, (i+1.2)*24, 1, (obj.kind % 4) * I_SIZE, pyxel.floor(obj.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
             
             # draw tick for correct ingredients in pizza
-            if ingredient.kind in self.pizza:
+            if obj.achieved:
                 pyxel.blt(210, (i+1.2)*24, 0, 0, 0, I_SIZE, I_SIZE, 1)
 
 
