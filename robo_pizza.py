@@ -13,6 +13,7 @@ GAME_W = 192     # width for game playing space
 OBJ_W = 64      # width for objective panel
 HEIGHT = 128    # window height
 I_LIMIT = 110    # height at which ingredients should disappear
+FALL_SPEED = 1    # rate at which ingredients fall
 
 #TODO:
 # add process of taking complete pizza to oven
@@ -66,7 +67,7 @@ class App:
         self.IL = IngredientList(self.factor, I_NUMS_GOOD, I_NUMS_BAD)
 
         # the number of ingredients that should be in play at any one time - this could also act as a difficulty modifier
-        num_ingredients = 4
+        num_ingredients = 6
         # create a list of the Ingredient objects that are initially falling
         self.ingredients = [
             self.generate_ingredient() for i in range(num_ingredients - 1)
@@ -89,6 +90,12 @@ class App:
         # update ingredients
         for i, v in enumerate(self.ingredients):
             self.ingredients[i] = self.update_ingredient(v)
+
+        # update difficulty 
+        #TODO: maybe make this a function / generally smarter
+        # increase in score of 5 points increase fall speed by 0.1
+        global FALL_SPEED 
+        FALL_SPEED = 1.2 + pyxel.floor(self.score/5) / 10 
 
 
     def update_player(self):
@@ -130,8 +137,7 @@ class App:
             ingredient = self.generate_ingredient()
 
         # otherwise, let the ingredient keep falling
-        fall_speed = 1.2      # this could also be utilised for changing difficulty 
-        ingredient.y += fall_speed
+        ingredient.y += FALL_SPEED
 
         return ingredient
 
@@ -171,6 +177,9 @@ class App:
             self.pizza = []
             self.strikes += 1
             self.is_base = False
+            # need to update objectives also
+            for obj in self.objectives:
+                obj.achieved = False
 
 
         # given our new pizza, check to see if objectives need updating
@@ -234,7 +243,6 @@ class App:
         if abs(self.player_x - 16) < I_SIZE and all(obj.achieved for obj in self.objectives):
             self.update_objectives(make_new = True)
 
-        
 
 
     def draw(self):
