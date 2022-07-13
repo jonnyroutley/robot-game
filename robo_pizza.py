@@ -15,6 +15,7 @@ HEIGHT = 128    # window height
 I_LIMIT = 110    # height at which ingredients should disappear
 
 #TODO:
+# add process of taking complete pizza to oven
 # add speech bubbles for bad items
 # enforce base collection first
 # allow for an entirely bad pizza order to come in sometimes
@@ -100,6 +101,9 @@ class App:
         if pyxel.btn(pyxel.KEY_RIGHT):
             self.player_x = min(self.player_x + 2, GAME_W - 24)
             self.player_dx = 1
+
+        if pyxel.btn(pyxel.KEY_SPACE):
+            self.add_to_oven()
 
     def update_ingredient(self, ingredient):
         # for a given falling ingredient, see if it needs updating in some way
@@ -204,11 +208,11 @@ class App:
 
         return objectives
 
-    def update_objectives(self):
+    def update_objectives(self, make_new = False):
         # check to see whether our current objectives need changing
 
-        # if order is complete then we want to create a new order:
-        if all(obj.achieved for obj in self.objectives):
+        # if the complete pizza has been added to the oven, then make a new one
+        if make_new:
             # increase score by 5
             self.score += 5
             self.objectives = self.generate_objectives()
@@ -223,6 +227,14 @@ class App:
             self.objectives = self.generate_objectives()
             self.pizza = []
             self.is_base = False
+
+    def add_to_oven(self):
+        # if we have a complete pizza, add it to the oven to get points and get new objectives
+        # check position and that all objectives are complete:
+        if abs(self.player_x - 16) < I_SIZE and all(obj.achieved for obj in self.objectives):
+            self.update_objectives(make_new = True)
+
+        
 
 
     def draw(self):
