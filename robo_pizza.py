@@ -150,27 +150,34 @@ class App:
 
     def update_pizza(self, kind):
         # this function is called whenever an ingredient is collected by the player
+        #NOTE: for now we can enforce that all ingredients are collected in a certain order - eventually we maybe only
+        # want this to apply to base and sauce
 
         # if a good ingredient is collected:
         if kind % 2 == 0:
+            # save our current score for use later
             saved_score = self.score
-            for obj in self.objectives:
-                # if ingredient is one of our unfulfilled objectives:
-                if kind == obj.kind and not obj.achieved:
-                     # add the ingredient kind to our pizza (so that it can be drawn)
-                        self.pizza.append(kind)
 
-                        # update our objectives
-                        obj.achieved = True
+            # if this ingredient matches the first unfulfilled objective
+            first = next(obj for obj in self.objectives if not obj.achieved)
+            if kind == first.kind:
+    
+                # add the ingredient kind to our pizza (so that it can be drawn)
+                self.pizza.append(kind)
 
-                        # increase the score by 1
-                        self.score += 1
+                # update our objectives
+                first.achieved = True
 
-                        # if we collect a base, mark .is_base as True so no more bases are generated
-                        if kind == 0:
-                            self.is_base = True
-                        
-                        break       # exit loop once ingredient has been found
+                # increase the score by 1
+                self.score += 1
+
+                # if we collect a base, mark .is_base as True so no more bases are generated
+                if kind == 0:
+                    self.is_base = True
+                
+                # break       # exit loop once ingredient has been found
+
+                    
             
             # if score hasn't changed, we either collected an item that isn't part of our objectives or has already been collected
             if saved_score == self.score:
