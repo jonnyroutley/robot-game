@@ -24,12 +24,16 @@ FALL_SPEED = 1    # rate at which ingredients fall
 # NOTE: pizza and objectives might not both be necessary - pizza is essentially our fulfilled objectives
 # test
 
+# NOTE: want to enforce collection of base first and then sauce second if included in
+# when objectives are generated, enforce that sauce is second 
+# when ingredient is collected, only accept if in correct order 
+
 
 
 
 # Ordered list of ingredient names for converting 'kind' integer to name
-I_NAMES = ['Pizza Base', 'Rotten Egg', 'Mushroom', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
-            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Tomato Sauce', 'Paperclip', 'Basil']
+I_NAMES = ['Pizza Base', 'Rotten Egg', 'Tomato Sauce', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
+            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Mushroom', 'Paperclip', 'Basil']
 
 # The ingredients are ordered such that all the even ones are good to eat and the odds are not
 # we can therefore define two more lists that the store the indices of the good and bad ingredients respectively
@@ -212,7 +216,18 @@ class App:
     def generate_objectives(self):
         # return a new list of Objective items which form a new pizza order
         # each pizza must include a base
-        objectives = [Objective(0)] + [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+        
+        rnd_objectives = [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+
+        # because ingredients have a numerical value (kind) we can just sort the list in increasing order
+        # this will make sure sauce is always after base and before other ingredients
+        def sort_func(obj):
+            return obj.kind
+
+        rnd_objectives.sort(key=sort_func)
+
+        objectives = [Objective(0)] + rnd_objectives
+
 
         #TODO: if sauce is included, this should come after base. Also need to enforce base/sauce collection before other toppings
 
