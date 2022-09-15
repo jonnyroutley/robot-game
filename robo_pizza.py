@@ -32,7 +32,7 @@ FALL_SPEED = 1    # rate at which ingredients fall
 
 
 # Ordered list of ingredient names for converting 'kind' integer to name
-I_NAMES = ['Pizza Base', 'Rotten Egg', 'Tomato Sauce', 'Wasabi', 'Aubergine', 'Hammer', 'Swiss Cheese', 
+I_NAMES = ['Pizza Base', 'Wasabi', 'Tomato Sauce', 'Rotten Egg', 'Aubergine', 'Hammer', 'Swiss Cheese', 
             'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Mushroom', 'Paperclip', 'Basil']
 
 # The ingredients are ordered such that all the even ones are good to eat and the odds are not
@@ -60,7 +60,7 @@ class App:
         self.is_alive = True
         self.strikes = 0
 
-        self.objectives = self.generate_objectives()
+        self.objectives = self.generate_objectives(is_good=False)
 
         # current pizza that is being built
         self.pizza = []
@@ -129,7 +129,7 @@ class App:
         # offset the ingredient so we track the centre of it instead of the top left
         if not ingredient.collected and abs(ingredient.x + I_SIZE/2 - tray_pos) < 16 and abs(ingredient.y + I_SIZE/2 - self.player_y) < 8:
             # add the ingredient kind to the pizza 
-            self.update_pizza(ingredient.kind)
+            self.update_pizza(ingredient.kind, is_good=False)
 
             # set this ingredient to having been collected
             ingredient.collected = True
@@ -148,13 +148,23 @@ class App:
 
 
 
-    def update_pizza(self, kind):
+    def update_pizza(self, kind, is_good=True):
         # this function is called whenever an ingredient is collected by the player
         #NOTE: for now we can enforce that all ingredients are collected in a certain order - eventually we maybe only
         # want this to apply to base and sauce
 
-        # if a good ingredient is collected:
-        if kind % 2 == 0:
+        #NOTE: currently adding the flag param is_good - this is to enable functionality of an entirely bad ingredient pizza order
+        # coming in and being appropriately scored
+
+        if is_good:
+            #bad var name - change
+            flag = 0
+        else:
+            flag = 1
+        
+        # if a an appropriate ingredient is collected:
+        #NOTE: bitwise or?
+        if kind == 0 or kind % 2 == flag:
             # save our current score for use later
             saved_score = self.score
 
@@ -175,16 +185,15 @@ class App:
                 if kind == 0:
                     self.is_base = True
                 
-                # break       # exit loop once ingredient has been found
 
-                    
+            # NOTE: if an ingredient is collected that is in our objectives but not in the right order, allow it but don't increase score?
             
             # if score hasn't changed, we either collected an item that isn't part of our objectives or has already been collected
             if saved_score == self.score:
                 # therefore, don't add it to the pizza and incur a strike
                 self.strikes += 1
 
-        # if bad ingredient is collected, empty pizza and add a strike. Also set is_base to False.
+        # if inappropriate ingredient is collected, empty pizza and add a strike. Also set is_base to False.
         else:
             self.pizza = []
             self.strikes += 1
@@ -220,11 +229,16 @@ class App:
         return Ingredient(kind, I_NAMES, x, y)
 
 
-    def generate_objectives(self):
+    def generate_objectives(self, is_good=True):
         # return a new list of Objective items which form a new pizza order
-        # each pizza must include a base
-        
-        rnd_objectives = [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+
+        if is_good:
+        # by default we want to generate a pizza that contains a base and a random assortment of 'good' ingredients    
+            rnd_objectives = [Objective(2*pyxel.rndi(1, len(I_NUMS_GOOD)-1)) for i in range(3)]
+
+        else:
+            # occasionally we (might?) want to generate a pizza that has a base but is full of 'bad' ingredients 
+            rnd_objectives = [Objective(2*pyxel.rndi(1, len(I_NUMS_BAD)) - 1) for i in range(3)]
 
         # because ingredients have a numerical value (kind) we can just sort the list in increasing order
         # this will make sure sauce is always after base and before other ingredients
@@ -233,12 +247,12 @@ class App:
 
         rnd_objectives.sort(key=sort_func)
 
+        # each pizza must include a base
         objectives = [Objective(0)] + rnd_objectives
 
-
-        #TODO: if sauce is included, this should come after base. Also need to enforce base/sauce collection before other toppings
-
         return objectives
+
+    
 
     def update_objectives(self, make_new = False):
         # check to see whether our current objectives need changing
@@ -247,7 +261,7 @@ class App:
         if make_new:
             # increase score by 5
             self.score += 5
-            self.objectives = self.generate_objectives()
+            self.objectives = self.generate_objectives(is_good=False)
             # reset pizza
             self.pizza = []
             self.is_base = False
@@ -256,7 +270,7 @@ class App:
         if self.strikes == 3:
             self.strikes = 0
             self.score = 0
-            self.objectives = self.generate_objectives()
+            self.objectives = self.generate_objectives(is_good=False)
             self.pizza = []
             self.is_base = False
 
