@@ -19,7 +19,6 @@ FALL_SPEED = 1    # rate at which ingredients fall
 # add process of taking complete pizza to oven
 # add speech bubbles for bad items
 # enforce base collection first
-# allow for an entirely bad pizza order to come in sometimes
 # add variable difficulty as game progresses
 # NOTE: pizza and objectives might not both be necessary - pizza is essentially our fulfilled objectives
 # test
@@ -60,11 +59,12 @@ class App:
         self.is_alive = True
         self.strikes = 0
 
-        self.objectives = self.generate_objectives(is_good=False)
+        self.objectives = self.generate_objectives()
 
         # current pizza that is being built
         self.pizza = []
-        self.is_base = False     #  used to see if pizza contains a base        
+        self.is_base = False     #  used to see if pizza contains a base
+        self.is_good = True        
 
         # factor may become game difficulty - it determines how many more times 'good' ingredients are generated as compared to 'bad' ones. 
         # IL is a shuffled list of ingredients from which we pick the next ingredients to appear
@@ -129,7 +129,7 @@ class App:
         # offset the ingredient so we track the centre of it instead of the top left
         if not ingredient.collected and abs(ingredient.x + I_SIZE/2 - tray_pos) < 16 and abs(ingredient.y + I_SIZE/2 - self.player_y) < 8:
             # add the ingredient kind to the pizza 
-            self.update_pizza(ingredient.kind, is_good=False)
+            self.update_pizza(ingredient.kind, is_good=self.is_good)
 
             # set this ingredient to having been collected
             ingredient.collected = True
@@ -261,7 +261,13 @@ class App:
         if make_new:
             # increase score by 5
             self.score += 5
-            self.objectives = self.generate_objectives(is_good=False)
+            
+            # occasionally a pizza with all bad ingredients can be ordered:
+            if pyxel.rndi(1, 5) == 2:
+                self.is_good = False
+            else:
+                self.is_good = True 
+            self.objectives = self.generate_objectives(is_good=self.is_good)
             # reset pizza
             self.pizza = []
             self.is_base = False
@@ -270,7 +276,11 @@ class App:
         if self.strikes == 3:
             self.strikes = 0
             self.score = 0
-            self.objectives = self.generate_objectives(is_good=False)
+            if pyxel.rndi(1, 5) == 2:
+                self.is_good = False
+            else:
+                self.is_good = True 
+            self.objectives = self.generate_objectives(is_good=self.is_good)
             self.pizza = []
             self.is_base = False
 
