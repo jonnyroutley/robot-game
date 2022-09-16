@@ -25,8 +25,9 @@ FALL_SPEED = 1    # rate at which ingredients fall
 
 
 # Ordered list of ingredient names for converting 'kind' integer to name
-I_NAMES = ['Pizza Base', 'Wasabi', 'Tomato Sauce', 'Rotten Egg', 'Aubergine', 'Hammer', 'Swiss Cheese', 
-            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Mozzarella', 'A... Nose?', 'Mushroom', 'Paperclip', 'Basil']
+I_NAMES = ['Pizza Base', 'Wasabi', 'Tomato Sauce', 'Rotten Egg', 'Aubergine', 'Hammer', 'Truffle Pec', 
+            'Stinky Socks', 'Pepperoni', 'Fish Carcass', 'Buffala', 'A... Nose?', 'Mushroom', 'Paperclip', 'Basil', 
+            'Mouldy Cheese']
 
 # The ingredients are ordered such that all the even ones are good to eat and the odds are not
 # we can therefore define two more lists that the store the indices of the good and bad ingredients respectively
@@ -94,7 +95,7 @@ class App:
         #TODO: maybe make this a function / generally smarter
         # increase in score of 5 points increase fall speed by 0.1
         global FALL_SPEED 
-        FALL_SPEED = 1.2 + pyxel.floor(self.score/5) / 10 
+        FALL_SPEED = 1.4 + pyxel.floor(self.score/5) / 10 
 
 
     def update_player(self):
@@ -327,7 +328,6 @@ class App:
                 pyxel.blt(ingredient.x, ingredient.y, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
 
 
-
         # draw player
         pyxel.blt(
             self.player_x,
@@ -339,6 +339,11 @@ class App:
             32,
             1
         )
+
+        # animate robots eyes
+        if pyxel.frame_count == 0:
+            pass
+
 
         # draw pizza
         for i, kind in enumerate(self.pizza):    
