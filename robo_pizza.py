@@ -16,17 +16,11 @@ I_LIMIT = 110    # height at which ingredients should disappear
 FALL_SPEED = 1    # rate at which ingredients fall
 
 #TODO:
-# add process of taking complete pizza to oven
 # add speech bubbles for bad items
-# enforce base collection first
-# add variable difficulty as game progresses
 # NOTE: pizza and objectives might not both be necessary - pizza is essentially our fulfilled objectives
 # test
 
-# NOTE: want to enforce collection of base first and then sauce second if included in
-# when objectives are generated, enforce that sauce is second 
-# when ingredient is collected, only accept if in correct order 
-
+#NOTE: now we want to make it such that base and sauce are collected first but then ingredients after that can be in any order
 
 
 
@@ -216,6 +210,11 @@ class App:
 
         # if IL is empty then regenerate
         if not self.IL.items:
+            if self.is_good:
+                self.factor = 3
+            else:
+                self.factor = 1
+
             self.IL = IngredientList(self.factor, I_NUMS_GOOD, I_NUMS_BAD)
         
         # if pizza has no base, we want to generate it and more frequently than normal
