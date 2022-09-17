@@ -341,8 +341,17 @@ class App:
         )
 
         # animate robots eyes
-        if pyxel.frame_count == 0:
-            pass
+        if pyxel.frame_count % 50 < 25:
+            pyxel.blt(
+                self.player_x + 8,
+                self.player_y + 8,
+                0,
+                64,
+                24,
+                16,
+                8,
+                1
+            )
 
 
         # draw pizza
