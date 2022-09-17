@@ -12,7 +12,7 @@ I_SIZE = 16      # ingredient block size
 GAME_W = 192     # width for game playing space
 OBJ_W = 64      # width for objective panel
 HEIGHT = 128    # window height
-I_LIMIT = 110    # height at which ingredients should disappear
+I_LIMIT = 90    # height at which ingredients should disappear
 FALL_SPEED = 1    # rate at which ingredients fall
 
 #TODO:
@@ -59,7 +59,11 @@ class App:
         # current pizza that is being built
         self.pizza = []
         self.is_base = False     #  used to see if pizza contains a base
-        self.is_good = True        
+        self.is_good = True
+
+        # vars for mice
+        self.mice_x = GAME_W        
+        self.pizza_needs_removing = False
 
         # factor may become game difficulty - it determines how many more times 'good' ingredients are generated as compared to 'bad' ones. 
         # IL is a shuffled list of ingredients from which we pick the next ingredients to appear
@@ -90,6 +94,9 @@ class App:
         # update ingredients
         for i, v in enumerate(self.ingredients):
             self.ingredients[i] = self.update_ingredient(v)
+
+        if self.pizza_needs_removing:
+            self.update_mice()
 
         # update difficulty 
         #TODO: maybe make this a function / generally smarter
@@ -290,6 +297,12 @@ class App:
         if abs(self.player_x - 16) < I_SIZE and all(obj.achieved for obj in self.objectives):
             self.update_objectives(make_new = True)
 
+    def update_mice(self):
+        self.mice_x -= 2
+        if self.mice_x < -1*I_SIZE*2:
+            self.mice_x = GAME_W
+            self.pizza_needs_removing = False
+
 
 
     def draw(self):
@@ -326,6 +339,14 @@ class App:
         for ingredient in self.ingredients:
             if not ingredient.collected:
                 pyxel.blt(ingredient.x, ingredient.y, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
+
+
+        #TODO: Add animation for spoilt pizza dropping to floor
+        #TODO: Add animation for mouse removing spoilt pizza
+        if self.pizza_needs_removing:
+            
+            # draw mouse running across screen
+            pyxel.blt(self.mice_x, 104 + pyxel.sin(5*pyxel.frame_count), 0, 0, 136, I_SIZE*1.5, I_SIZE*1.5, 1)
 
 
         # draw player
@@ -366,6 +387,9 @@ class App:
                 I_SIZE, 
                 1
             )
+
+     
+
 
         # draw objectives
         pyxel.bltm(GAME_W, 0, 0, GAME_W, 0, OBJ_W, HEIGHT)
