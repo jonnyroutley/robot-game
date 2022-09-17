@@ -61,9 +61,12 @@ class App:
         self.is_base = False     #  used to see if pizza contains a base
         self.is_good = True
 
-        # vars for mice
+        # vars for removal process
         self.mice_x = GAME_W        
         self.pizza_needs_removing = False
+        self.pizza_x = 0
+        self.pizza_y = 0
+        self.fall_path = [3, 2, 2, 1, 0, -1, -2, -2, -4, -6, -8, -10]
 
         # factor may become game difficulty - it determines how many more times 'good' ingredients are generated as compared to 'bad' ones. 
         # IL is a shuffled list of ingredients from which we pick the next ingredients to appear
@@ -88,21 +91,26 @@ class App:
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
 
-        # each time we update, update the robot
-        self.update_player()
-
-        # update ingredients
-        for i, v in enumerate(self.ingredients):
-            self.ingredients[i] = self.update_ingredient(v)
-
         if self.pizza_needs_removing:
-            self.update_mice()
+            # pause the rest of the game functions and just perform
+            # the animation of the pizza falling 
+            self.update_removal()
 
-        # update difficulty 
-        #TODO: maybe make this a function / generally smarter
-        # increase in score of 5 points increase fall speed by 0.1
-        global FALL_SPEED 
-        FALL_SPEED = 1.4 + pyxel.floor(self.score/5) / 10 
+        else:
+            # each time we update, update the robot
+            self.update_player()
+
+            # update ingredients
+            for i, v in enumerate(self.ingredients):
+                self.ingredients[i] = self.update_ingredient(v)
+
+
+
+            # update difficulty 
+            #TODO: maybe make this a function / generally smarter
+            # increase in score of 5 points increase fall speed by 0.1
+            global FALL_SPEED 
+            FALL_SPEED = 1.4 + pyxel.floor(self.score/5) / 10 
 
 
     def update_player(self):
@@ -150,7 +158,7 @@ class App:
 
 
 
-    def update_pizza(self, kind, is_good=True):
+    def update_pizza(self, kind, is_good=True, empty=False):
         # this function is called whenever an ingredient is collected by the player
         #NOTE: for now we can enforce that all ingredients are collected in a certain order - eventually we maybe only
         # want this to apply to base and sauce
@@ -158,45 +166,9 @@ class App:
         #NOTE: currently adding the flag param is_good - this is to enable functionality of an entirely bad ingredient pizza order
         # coming in and being appropriately scored
 
-        if is_good:
-            #bad var name - change
-            flag = 0
-        else:
-            flag = 1
-        
-        # if a an appropriate ingredient is collected:
-        #NOTE: bitwise or?
-        if kind == 0 or kind % 2 == flag:
-            # save our current score for use later
-            saved_score = self.score
-
-            # if this ingredient matches the first unfulfilled objective
-            first = next(obj for obj in self.objectives if not obj.achieved)
-            if kind == first.kind:
-    
-                # add the ingredient kind to our pizza (so that it can be drawn)
-                self.pizza.append(kind)
-
-                # update our objectives
-                first.achieved = True
-
-                # increase the score by 1
-                self.score += 1
-
-                # if we collect a base, mark .is_base as True so no more bases are generated
-                if kind == 0:
-                    self.is_base = True
-                
-
-            # NOTE: if an ingredient is collected that is in our objectives but not in the right order, allow it but don't increase score?
-            
-            # if score hasn't changed, we either collected an item that isn't part of our objectives or has already been collected
-            if saved_score == self.score:
-                # therefore, don't add it to the pizza and incur a strike
-                self.strikes += 1
 
         # if inappropriate ingredient is collected, empty pizza and add a strike. Also set is_base to False.
-        else:
+        if empty:
             self.pizza = []
             self.strikes += 1
             self.is_base = False
@@ -204,6 +176,56 @@ class App:
             for obj in self.objectives:
                 obj.achieved = False
 
+        else:
+
+            if is_good:
+                #bad var name - change
+                flag = 0
+            else:
+                flag = 1
+            
+            # if a an appropriate ingredient is collected:
+            #NOTE: bitwise or?
+            if kind == 0 or kind % 2 == flag:
+                # save our current score for use later
+                saved_score = self.score
+
+                # if this ingredient matches the first unfulfilled objective
+                first = next(obj for obj in self.objectives if not obj.achieved)
+                if kind == first.kind:
+        
+                    # add the ingredient kind to our pizza (so that it can be drawn)
+                    self.pizza.append(kind)
+
+                    # update our objectives
+                    first.achieved = True
+
+                    # increase the score by 1
+                    self.score += 1
+
+                    # if we collect a base, mark .is_base as True so no more bases are generated
+                    if kind == 0:
+                        self.is_base = True
+                    
+                # NOTE: if an ingredient is collected that is in our objectives but not in the right order, allow it but don't increase score?
+                
+                # if score hasn't changed, we either collected an item that isn't part of our objectives or has already been collected
+                if saved_score == self.score:
+                    # therefore, don't add it to the pizza and incur a strike
+                    self.strikes += 1
+
+            # inappropriate ingredient has been collected, so start removal process
+            else:
+                # Add ingredient to pizza so it can be drawn
+                self.pizza.append(kind)
+                # initiate pizza removal process
+                self.pizza_needs_removing = True
+                # once done the rest of the game should pause 
+                #set pizza position for animation
+                self.pizza_x = self.player_x + I_SIZE if self.player_dx > 0 else self.player_x
+                self.pizza_y = self.player_y - I_SIZE
+                # set initial mice position so it meets pizza at right time
+                self.mice_x = GAME_W + 5
 
         # given our new pizza, check to see if objectives need updating
         self.update_objectives()
@@ -297,11 +319,28 @@ class App:
         if abs(self.player_x - 16) < I_SIZE and all(obj.achieved for obj in self.objectives):
             self.update_objectives(make_new = True)
 
-    def update_mice(self):
-        self.mice_x -= 2
-        if self.mice_x < -1*I_SIZE*2:
-            self.mice_x = GAME_W
-            self.pizza_needs_removing = False
+    def update_removal(self):
+        # update pizza position
+        if self.pizza_y < 100:
+            self.pizza_x = self.pizza_x + 2 if self.player_dx > 0 else self.pizza_x - 2 
+            # try:
+            i_s = I_SIZE if self.player_dx >0 else 0
+            diff = abs(self.pizza_x - self.player_x - i_s)
+            self.pizza_y -= self.fall_path[int(diff/2)]
+
+        # once pizza has hit floor we can send in mice
+        else:
+            # update mice
+            self.mice_x -= 3
+            if self.mice_x - self.pizza_x - I_SIZE/2 < 2:
+                self.pizza_x -= 3
+
+            # once mice are sufficiently off screen, reset
+            if self.mice_x < -1*I_SIZE*2:
+                # self.mice_x = GAME_W
+                self.pizza_needs_removing = False
+                # update pizza again now that it has been removed
+                self.update_pizza(0, empty=True)
 
 
 
@@ -348,6 +387,34 @@ class App:
             # draw mouse running across screen
             pyxel.blt(self.mice_x, 104 + pyxel.sin(5*pyxel.frame_count), 0, 0, 136, I_SIZE*1.5, I_SIZE*1.5, 1)
 
+            # draw pizza
+            for i, kind in enumerate(self.pizza):    
+                pyxel.blt(
+                    # self.player_x + I_SIZE if self.player_dx > 0 else self.player_x,
+                    self.pizza_x,
+                    self.pizza_y - pyxel.floor(i/2), 
+                    2,
+                    (kind % 4) * I_SIZE, 
+                    pyxel.floor(kind / 4) * I_SIZE, 
+                    I_SIZE, 
+                    I_SIZE, 
+                    1
+                )
+
+        else:   
+            # draw pizza
+            for i, kind in enumerate(self.pizza):    
+                pyxel.blt(
+                    self.player_x + I_SIZE if self.player_dx > 0 else self.player_x,
+                    self.player_y - I_SIZE - pyxel.floor(i/2), 
+                    2,
+                    (kind % 4) * I_SIZE, 
+                    pyxel.floor(kind / 4) * I_SIZE, 
+                    I_SIZE, 
+                    I_SIZE, 
+                    1
+                )
+
 
         # draw player
         pyxel.blt(
@@ -375,18 +442,6 @@ class App:
             )
 
 
-        # draw pizza
-        for i, kind in enumerate(self.pizza):    
-            pyxel.blt(
-                self.player_x + I_SIZE if self.player_dx > 0 else self.player_x,
-                self.player_y - I_SIZE - pyxel.floor(i/2), 
-                2,
-                (kind % 4) * I_SIZE, 
-                pyxel.floor(kind / 4) * I_SIZE, 
-                I_SIZE, 
-                I_SIZE, 
-                1
-            )
 
      
 
