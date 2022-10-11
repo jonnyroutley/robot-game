@@ -185,7 +185,6 @@ class App:
                 flag = 1
             
             # if a an appropriate ingredient is collected:
-            #NOTE: bitwise or?
             if kind == 0 or kind % 2 == flag:
                 # save our current score for use later
                 saved_score = self.score
@@ -379,9 +378,6 @@ class App:
             if not ingredient.collected:
                 pyxel.blt(ingredient.x, ingredient.y, 1, (ingredient.kind % 4) * I_SIZE, pyxel.floor(ingredient.kind / 4) * I_SIZE, I_SIZE, I_SIZE, 1)
 
-
-        #TODO: Add animation for spoilt pizza dropping to floor
-        #TODO: Add animation for mouse removing spoilt pizza
         if self.pizza_needs_removing:
             
             # draw mouse running across screen
