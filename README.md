@@ -5,7 +5,7 @@
 
 <img src="https://github.com/jonnyroutley/robot-game/blob/main/imgs/Game.gif">
 
-Collecting the right types/quantities of ingredients according to the order earns points, with a bonus for every correct pizza completed.
+Score points by collecting the ingredients (`left/right arrow keys`) shown in order. When a pizza is complete take it to the oven and hit `space` to clear the order and get a points bonus. 
 
 Collecting a wrong ingredient will incur a strike, and if it's one of the nasty ones (*is that a... human nose?*) will mean you have to start the order over. Three strikes and it's game over !
 
@@ -17,6 +17,9 @@ Then run:
 
 ```
 git clone https://github.com/jonnyroutley/robot-game
-cd robot-game
-pyxel run robo_pizza.py
+cd robot-game/robo_pizza
+pyxel play robo_pizza.py.pyxapp
 ```
+
+Alternatively, you can play in-browser here:
+https://kitao.github.io/pyxel/wasm/launcher/?play=jonnyroutley.robot-game.robo_pizza.robo_pizza
