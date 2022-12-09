@@ -3,7 +3,7 @@
 
 *Order's Up! Help your robot friend make pizzas by collecting the right ingredients and avoiding the bad stuff.*
 
-<img src="https://github.com/jonnyroutley/robot-game/blob/main/imgs/Game.gif">
+<img src="https://github.com/jonnyroutley/robot-game/blob/main/imgs/robot_game.gif">
 
 Score points by collecting the ingredients (`left/right arrow keys`) shown in order. When a pizza is complete take it to the oven and hit `space` to clear the order and get a points bonus. 
 
@@ -16,7 +16,15 @@ Install Pyxel following these [instructions](https://github.com/kitao/pyxel#how-
 Then run:
 
 ```
+# clone the repo
 git clone https://github.com/jonnyroutley/robot-game
+
+# create a virtual environment and install requirements
+python -m venv env
+source env/Scripts/activate
+pip install -r requirements.txt
+
+# play the game!
 cd robot-game/robo_pizza
 pyxel play robo_pizza.py.pyxapp
 ```
